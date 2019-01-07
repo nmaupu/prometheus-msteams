@@ -80,7 +80,13 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 	if err := json.NewEncoder(buffer).Encode(card); err != nil {
 		return nil, fmt.Errorf("Failed encoding message card: %v", err)
 	}
-	res, err := http.Post(webhook, "application/json", buffer)
+
+	// Use proxy from environment if defined
+	tr := &http.DefaultTransport
+	tr.Proxy = ProxyFromEnvironment
+	httpClient := &http.Client{Transport: &tr}
+
+	res, err := httpClient.Post(webhook, "application/json", buffer)
 	if err != nil {
 		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
 			webhook, err)
